@@ -1,0 +1,7 @@
+
+*.swp
+*.pyc
+.env/*
+/**/*.h5
+/**/*.JPEG
+/**/.ipynb_checkpoints/*
