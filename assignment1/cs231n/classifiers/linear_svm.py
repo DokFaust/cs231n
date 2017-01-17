@@ -113,7 +113,14 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+  positive_scores = np.array(new_scores != 0, dtype=np.float32)
+
+  #compute the column-wise sum of the positive scores
+  #as stated in the course notes
+
+  positive_scores[xrange(num_train), y] -= np.sum(positive_scores, axis=1)
+
+  dW = (X.T).dot(positive_scores)/num_train + reg*W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
