@@ -32,12 +32,26 @@ def svm_loss_naive(W, X, y, reg):
       if j == y[i]:
         continue
       margin = scores[j] - correct_class_score + 1 # note delta = 1
+
       if margin > 0:
         loss += margin
+
+        #As by the notes, the gradient is updated only if the classifier
+        #of the score and the example are similar enough by delta,
+        #If not it's meaningless to update the gradient and so it stay
+        # to zero by default
+        #Also the gradient should be updated for the correct class,
+        #so here we make a small trick
+
+        dW[:, y[i]] -= X[i,:]
+        dW[:,j] += X[i,:]
+
+
 
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   loss /= num_train
+  dW /= num_train
 
   # Add regularization to the loss.
   loss += 0.5 * reg * np.sum(W * W)
