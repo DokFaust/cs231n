@@ -124,7 +124,7 @@ class TwoLayerNet(object):
 
     #Let's be honest, most of this code is re-arranged from the website
     #course notes
-    
+
     binary_scores = np.zeros_like(scores)
     binary_scores[xrange(N), y] = -1
     binary_scores += exp_scores/exp_scores_sum.reshape(-1,1)
@@ -188,7 +188,9 @@ class TwoLayerNet(object):
       # TODO: Create a random minibatch of training data and labels, storing  #
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
-      pass
+      idx = np.random.choice(num_train, batch_size)
+      X_batch = X[idx]
+      y_batch = y[idx]
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -203,7 +205,10 @@ class TwoLayerNet(object):
       # using stochastic gradient descent. You'll need to use the gradients   #
       # stored in the grads dictionary defined above.                         #
       #########################################################################
-      pass
+      self.params['W1'] -= grads['W1']*learning_rate
+      self.params['b1'] -= grads['b1']*learning_rate
+      self.params['W2'] -= grads['W2']*learning_rate
+      self.params['b2'] -= grads['b2']*learning_rate
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -214,8 +219,8 @@ class TwoLayerNet(object):
       # Every epoch, check train and val accuracy and decay learning rate.
       if it % iterations_per_epoch == 0:
         # Check accuracy
-        train_acc = (self.predict(X_batch) == y_batch).mean()
-        val_acc = (self.predict(X_val) == y_val).mean()
+        train_acc = np.sum((self.predict(X_batch) == y_batch))/num_train
+        val_acc = np.sum((self.predict(X_val) == y_val))/num_train
         train_acc_history.append(train_acc)
         val_acc_history.append(val_acc)
 
