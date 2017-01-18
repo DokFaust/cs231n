@@ -119,8 +119,32 @@ class TwoLayerNet(object):
     # TODO: Compute the backward pass, computing the derivatives of the weights #
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
+
     #############################################################################
-    pass
+
+    #Let's be honest, most of this code is re-arranged from the website
+    #course notes
+    
+    binary_scores = np.zeros_like(scores)
+    binary_scores[xrange(N), y] = -1
+    binary_scores += exp_scores/exp_scores_sum.reshape(-1,1)
+
+    grads["W2"] = (neuron1.T).dot(binary_scores/N)
+    grads["W2"] += reg*W2
+
+    grads["b2"] = np.sum(binary_scores/N, axis=0)
+
+    #Neuron1 is the layer that passed through ReLU
+    dneuron1 = (binary_scores/N).dot(W2.T)
+    dneuron1[neuron1 == 0] = 0
+
+    #Compute W1
+    grads["W1"] = (X.T).dot(dneuron1)
+    grads["W1"] += reg*W1
+
+    #Compute b1
+    grads["b1"] = np.sum(dneuron1, axis=0)
+
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
