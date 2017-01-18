@@ -253,7 +253,10 @@ class TwoLayerNet(object):
     ###########################################################################
     # TODO: Implement this function; it should be VERY simple!                #
     ###########################################################################
-    pass
+    scores1 = X.dot(self.params["W1"]) + self.params["b1"]
+    neuron1 = np.maximum(0, scores1)
+    neuron2 = neuron1.dot(self.params["W2"]) + self.params["b2"]
+    y_pred = np.argmax(neuron2, axis=1)
     ###########################################################################
     #                              END OF YOUR CODE                           #
     ###########################################################################
