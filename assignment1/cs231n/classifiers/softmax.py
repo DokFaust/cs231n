@@ -100,7 +100,40 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+
+  D = W.shape[0]
+  C = W.shape[1]
+  N = X.shape[0]
+
+  #The procedure goes like for the naive impl
+  scores = X.dot(W)
+  scores_max = np.max(scores).reshape(-1,1)
+  #To avoid numerical instability, see above
+  scores -= scores_max
+  exp_scores = np.exp(scores)
+
+  #For each example we sum the scores
+  exp_scores_sum = np.sum(exp_scores, axis=1)
+  #correct_class_exp_scores = exp_scores[xrange(N), y]
+  correct_scores = scores[xrange(N),y]
+  loss = np.sum(-correct_scores + np.log(exp_scores_sum))
+
+  norm_exp_scores = exp_scores/(exp_scores_sum.reshape(-1,1))
+
+  binary_matrix = np.zeros_like(scores)
+  binary_matrix[xrange(N), y] = -1
+
+  norm_exp_scores += binary_matrix
+
+  dW = (X.T).dot(norm_exp_scores)
+
+  #loss is normalized and added l2 regularization
+  loss /= N
+  loss += reg*np.sum(W**2)/2
+
+  #also dW is normalized and regularied
+  dW /= N
+  dW += reg*W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
