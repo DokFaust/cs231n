@@ -74,11 +74,13 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    omega = X.dot(W1) + b1
+    neuron1 = np.maximum(0, omega)
+    scores = neuron1.dot(W2) +b2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
-    
+
     # If the targets are not given then jump out, we're done
     if y is None:
       return scores
@@ -92,7 +94,21 @@ class TwoLayerNet(object):
     # classifier loss. So that your results match ours, multiply the            #
     # regularization loss by 0.5                                                #
     #############################################################################
-    pass
+
+    #As for svm and softmax the gradient we have to avoid numerical instability
+
+    scores -= -np.max(scores)
+
+    exp_scores = np.exp(scores)
+
+    exp_scores_sum = np.sum(exp_scores, axis=1)
+
+    correct_scores = scores[xrange(N), y]
+
+    #Normalize and regularize the loss
+    loss = np.sum(-correct_scores + np.log(exp_scores_sum))/N
+    loss += reg*(np.sum(W1**2) + np.sum(W2**2))/2
+
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -214,5 +230,3 @@ class TwoLayerNet(object):
     ###########################################################################
 
     return y_pred
-
-
