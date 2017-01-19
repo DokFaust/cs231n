@@ -124,26 +124,28 @@ class TwoLayerNet(object):
 
     #Let's be honest, most of this code is re-arranged from the website
     #course notes
+    # Get correct class scores
+    binary_scores = np.zeros(scores.shape)
+    binary_scores[np.arange(N), y] = -1
+    final_scores = binary_scores + (exp_scores/exp_scores_sum.reshape(-1,1))
 
-    binary_scores = np.zeros_like(scores)
-    binary_scores[xrange(N), y] = -1
-    binary_scores += exp_scores/exp_scores_sum.reshape(-1,1)
+    # Compute W2
+    grads["W2"] = (neuron1.T).dot(final_scores/N)
+    grads["W2"] += reg*(W2)
 
-    grads["W2"] = (neuron1.T).dot(binary_scores/N)
-    grads["W2"] += reg*W2
+    # Compute b2
+    grads['b2'] = np.sum(final_scores/N, axis=0)
 
-    grads["b2"] = np.sum(binary_scores/N, axis=0)
+    # neuron1 is the layer that got ReLU'd
+    dJdneuron1 = (final_scores/N).dot(W2.T)
+    dJdneuron1[neuron1 == 0] = 0
 
-    #Neuron1 is the layer that passed through ReLU
-    dneuron1 = (binary_scores/N).dot(W2.T)
-    dneuron1[neuron1 == 0] = 0
+    # Compute W1
+    grads["W1"] = (X.T).dot(dJdneuron1)
+    grads["W1"] += reg*(W1)
 
-    #Compute W1
-    grads["W1"] = (X.T).dot(dneuron1)
-    grads["W1"] += reg*W1
-
-    #Compute b1
-    grads["b1"] = np.sum(dneuron1, axis=0)
+    # Compute b1
+    grads["b1"] = np.sum(dJdneuron1, axis=0)
 
     #############################################################################
     #                              END OF YOUR CODE                             #
@@ -205,6 +207,7 @@ class TwoLayerNet(object):
       # using stochastic gradient descent. You'll need to use the gradients   #
       # stored in the grads dictionary defined above.                         #
       #########################################################################
+
       self.params['W1'] -= grads['W1']*learning_rate
       self.params['b1'] -= grads['b1']*learning_rate
       self.params['W2'] -= grads['W2']*learning_rate
