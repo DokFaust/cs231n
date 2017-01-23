@@ -102,11 +102,11 @@ class TwoLayerNet(object):
     ############################################################################
     loss, dout = softmax_loss(scores, y)
 
-    loss += self.reg * 0.5* (np.sum(self.params['W1']**2) + np.sum(elf.params['W2']**2))
+    loss += self.reg * 0.5* (np.sum(self.params['W1']**2) + np.sum(self.params['W2']**2))
 
-    dX2, grads['W2'], grads['b2'] = affine_backward(dout, cache_forward_2)
-    dX2 = relu_backward(dX2, cache_relu_1)
-    dX1, grads['W1'], grads['b1'] = affine_backward(dX2, cache_forward_1)
+    dX2, grads['W2'], grads['b2'] = affine_backward(dout, cache_forward2)
+    dX2 = relu_backward(dX2, cache_relu)
+    dX1, grads['W1'], grads['b1'] = affine_backward(dX2, cache_forward1)
 
     grads['W2'] += self.reg * self.params['W2']
     grads['W1'] += self.reg * self.params['W1']
@@ -176,7 +176,24 @@ class FullyConnectedNet(object):
     # beta2, etc. Scale parameters should be initialized to one and shift      #
     # parameters should be initialized to zero.                                #
     ############################################################################
-    pass
+
+    #For the complete layer dimension formula see the course notes
+    #or better A guide to convolution arithmetic for deep learning.
+    #https://arxiv.org/pdf/1603.07285v1.pdf
+
+    dim = [input_dim] + hidden_dims + [num_classes]
+    for idx in xrange(len(dim) - 1):
+        #Like regex for weight and biases
+        index_str = str(idx+1)
+        self.params['W'+index_str] = weight_scale * np.random.randn(dim[idx], dim[idx+1])
+        self.params['b'+index_str] = np.zeros(dim[idx+1])
+
+        if use_batchnorm:
+            for index in xrange(self.num_layers + 1):
+                rho = 'gamma' + np.str(index+1)
+                self.params[rho] = np.ones(dim[index+1])
+                rho = 'beta' + np.str(index+1)
+                self.params[rho] = np.ones(dim[index+1])
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -234,7 +251,27 @@ class FullyConnectedNet(object):
     # self.bn_params[1] to the forward pass for the second batch normalization #
     # layer, etc.                                                              #
     ############################################################################
-    pass
+    #Temporary set for forward hidden layers
+    temp = {}
+    forward = X
+    for idx in xrange(self.num_layers-1):
+        index_str = str(idx+1)
+
+        forward, cache['affine'+index_str] =\
+            affine_forward(forward, self.params['W'+index_str], self.params['b']+index_str)
+
+        if self.use_batchnorm:
+            forward, cache['bn_param'+index_str] =\
+                batchnorm_forward(forward, self.params['gamma'+index_str], self.params['beta']+index_str, self.bn_params[idx])
+
+        #ReLU layer
+        forward, cache['relu_'+index_str] = relu_forward(forward)
+
+    #Last affine layer
+
+    index_str = str(self.num_layers)
+    scores, cache['affine_'+index_str] = affine_forward(forward, self.params['W'+index_str], self.params['b'+index_str])
+
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -257,7 +294,24 @@ class FullyConnectedNet(object):
     # automated tests, make sure that your L2 regularization includes a factor #
     # of 0.5 to simplify the expression for the gradient.                      #
     ############################################################################
-    pass
+    loss, dout = softmax_loss(scores, y)
+
+    dout, grads['W'+index_str], grads['b'+index_str] = affine_backward(dout, cache['affine_'+index_str])
+
+    for idx in xrange(self.num_layers - 2, -1, -1):
+        index_str = str(idx+1)
+
+        loss += 0.5 * self.reg * np.sum(self.params['W'+index_str] ** 2)
+
+        #Relu ativation
+        dout = relu_backward(dout, cache['relu'+index_str])
+
+        if self.use_batchnorm:
+            dout, grads['gamma'+index_str], grads['beta'+index_str] = batchnorm_backward(dout, cache['bn_'+index_str])
+
+        #dW and db_index
+        dout, grads['W'+index_str], grads['b'+index_str] = affine_backward(dout,cache['affine_'+index_str])
+        grads['W'+index_str] += self.reg * self.params['W'+index_str]
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
