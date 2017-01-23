@@ -191,9 +191,9 @@ class FullyConnectedNet(object):
         if use_batchnorm:
             for index in xrange(self.num_layers + 1):
                 rho = 'gamma' + np.str(index+1)
-                self.params[rho] = np.ones(dim[index+1])
+                self.params[rho] = np.ones(dim[idx+1])
                 rho = 'beta' + np.str(index+1)
-                self.params[rho] = np.ones(dim[index+1])
+                self.params[rho] = np.ones(dim[idx+1])
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -257,12 +257,12 @@ class FullyConnectedNet(object):
     for idx in xrange(self.num_layers-1):
         index_str = str(idx+1)
 
-        forward, temp['affine'+index_str] =\
+        forward, temp['affine_'+index_str] =\
             affine_forward(forward, self.params['W'+index_str], self.params['b'+index_str])
 
         if self.use_batchnorm:
-            forward, temp['bn_param'+index_str] =\
-                batchnorm_forward(forward, self.params['gamma'+index_str], self.params['beta'+index_str], self.bn_params[idx])
+            forward, temp['bn_'+index_str] =\
+            batchnorm_forward(forward, self.params['gamma'+index_str], self.params['beta'+index_str], self.bn_params[idx])
 
         #ReLU layer
         forward, temp['relu_'+index_str] = relu_forward(forward)
