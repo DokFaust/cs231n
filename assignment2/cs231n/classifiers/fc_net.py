@@ -257,20 +257,20 @@ class FullyConnectedNet(object):
     for idx in xrange(self.num_layers-1):
         index_str = str(idx+1)
 
-        forward, cache['affine'+index_str] =\
-            affine_forward(forward, self.params['W'+index_str], self.params['b']+index_str)
+        forward, temp['affine'+index_str] =\
+            affine_forward(forward, self.params['W'+index_str], self.params['b'+index_str])
 
         if self.use_batchnorm:
-            forward, cache['bn_param'+index_str] =\
-                batchnorm_forward(forward, self.params['gamma'+index_str], self.params['beta']+index_str, self.bn_params[idx])
+            forward, temp['bn_param'+index_str] =\
+                batchnorm_forward(forward, self.params['gamma'+index_str], self.params['beta'+index_str], self.bn_params[idx])
 
         #ReLU layer
-        forward, cache['relu_'+index_str] = relu_forward(forward)
+        forward, temp['relu_'+index_str] = relu_forward(forward)
 
     #Last affine layer
 
     index_str = str(self.num_layers)
-    scores, cache['affine_'+index_str] = affine_forward(forward, self.params['W'+index_str], self.params['b'+index_str])
+    scores, temp['affine_'+index_str] = affine_forward(forward, self.params['W'+index_str], self.params['b'+index_str])
 
     ############################################################################
     #                             END OF YOUR CODE                             #
@@ -296,7 +296,7 @@ class FullyConnectedNet(object):
     ############################################################################
     loss, dout = softmax_loss(scores, y)
 
-    dout, grads['W'+index_str], grads['b'+index_str] = affine_backward(dout, cache['affine_'+index_str])
+    dout, grads['W'+index_str], grads['b'+index_str] = affine_backward(dout, temp['affine_'+index_str])
 
     for idx in xrange(self.num_layers - 2, -1, -1):
         index_str = str(idx+1)
@@ -304,13 +304,13 @@ class FullyConnectedNet(object):
         loss += 0.5 * self.reg * np.sum(self.params['W'+index_str] ** 2)
 
         #Relu ativation
-        dout = relu_backward(dout, cache['relu'+index_str])
+        dout = relu_backward(dout, temp['relu_'+index_str])
 
         if self.use_batchnorm:
-            dout, grads['gamma'+index_str], grads['beta'+index_str] = batchnorm_backward(dout, cache['bn_'+index_str])
+            dout, grads['gamma'+index_str], grads['beta'+index_str] = batchnorm_backward(dout, temp['bn_'+index_str])
 
         #dW and db_index
-        dout, grads['W'+index_str], grads['b'+index_str] = affine_backward(dout,cache['affine_'+index_str])
+        dout, grads['W'+index_str], grads['b'+index_str] = affine_backward(dout,temp['affine'+index_str])
         grads['W'+index_str] += self.reg * self.params['W'+index_str]
     ############################################################################
     #                             END OF YOUR CODE                             #
