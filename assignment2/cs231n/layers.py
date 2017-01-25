@@ -585,6 +585,14 @@ def max_pool_backward_naive(dout, cache):
   return dx
 
 
+def reshape_to_bn(X, N, C, H, W):
+  return np.swapaxes(X, 0, 1).reshape(C, -1).T
+
+def reshape_from_bn(out, N, C, H, W):
+  return np.swapaxes(out.T.reshape(C, N, H, W), 0, 1)
+
+
+
 def spatial_batchnorm_forward(x, gamma, beta, bn_param):
   """
   Computes the forward pass for spatial batch normalization.
@@ -616,7 +624,12 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
   # version of batch normalization defined above. Your implementation should  #
   # be very short; ours is less than five lines.                              #
   #############################################################################
-  pass
+  N, C, H, W = x.shape
+  x_dec = reshape_to_bn(x, *x.shape)
+  out, cache = batchnorm_forward(x_dec, gamma, beta, bn_param)
+  out = reshape_from_bn(out, *x.shape)
+  cache['X.shape'] = x.shape
+  cache['x'] = x
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -646,7 +659,15 @@ def spatial_batchnorm_backward(dout, cache):
   # version of batch normalization defined above. Your implementation should  #
   # be very short; ours is less than five lines.                              #
   #############################################################################
-  pass
+  x_shape = cache['X.shape']
+
+  cache['x'] = reshape_to_bn(cache['x'], *x_shape)
+  cache['x_hat'] = reshape_to_bn(cache['x_hat'], *x_shape)
+
+  dout_dec = reshape_to_bn(dout, *x_shape)
+
+  dx, dgamma, dbeta = batchnorm_backward(dout_dec, cache)
+  dx = reshape_from_bn(dx, *x_shape)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
