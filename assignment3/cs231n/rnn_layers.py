@@ -240,7 +240,7 @@ def word_embedding_backward(dout, cache):
   #the arguments summed. In this case the operation is equivalent to
   # dW[x] += dout except that if one index is repeated in x the sum will be
   #performed a second time
-  
+
   np.add.at(dW, x, dout)
   ##############################################################################
   #                               END OF YOUR CODE                             #
@@ -287,7 +287,24 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
   # TODO: Implement the forward pass for a single timestep of an LSTM.        #
   # You may want to use the numerically stable sigmoid implementation above.  #
   #############################################################################
-  pass
+  N, D = x.shape
+  N, H = prev_h.shape
+
+  scores = x.dot(Wx) + prev_h.dot(Wh) + b
+
+  #Instead of computing the nonlinear layer all at once in LSTM we divide the
+  #weights in four sub-intervals  tha will be merged together in the cache
+  #Please see the formula in the course slides or check out the deep learning book
+
+  first  = sigmoid(scores[:, : H])
+  second = sigmoid(scores[:, H : 2*H])
+  third  = sigmoid(scores[:, 2*H : 3*H])
+  fourth = sigmoid(scores[:, 3*H : ])
+
+  next_c = (prev_c * second) + ( fourth * first)
+  next_h = third * np.tanh(next_c)
+
+  cache =( first, second, third, fourth, x, Wx, Wh, prev_c, next_c, prev_h,  H, N)
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
@@ -319,7 +336,48 @@ def lstm_step_backward(dnext_h, dnext_c, cache):
   # HINT: For sigmoid and tanh you can compute local derivatives in terms of  #
   # the output value from the nonlinearity.                                   #
   #############################################################################
-  pass
+  first, second, third, fourth, x, Wx, Wh, prev_c, next_c, prev_h,  H, N = cache
+
+  int_grad = np.zeros( ( N, H*4) )
+  step_1  = dnext_h
+  step_2  = np.tanh(next_c) * step_1
+  step_3  = third * step_1
+  step_4  = ( 1 - (np.tanh(next_c)**2 )) * step_3
+  step_5  = step_4 + dnext_c
+  step_6  = step_5
+  step_7  = step_5
+  step_8  = prev_c * step_7
+  step_9  = second * (1 - second) * step_8
+  step_10 = first * step_6
+  step_11 = (1 - (fourth ** 2) ) * step_10
+  step_12 = fourth * step_6
+  step_13 = first * (1 - first) * step_12
+  step_14 = third * (1 - third) * step_2
+
+  #steps from 15 to 19  we will compute the gradients of the weight matrix
+  #and of the biases
+
+  int_grad[:, H:2*H] = step_9    #15
+
+  int_grad[:, 3*H:] = step_11    #16
+
+  int_grad[:, : H] = step_13     #17
+
+  int_grad[:, 2*H:3*H] = step_14 #18
+
+  db = np.sum(int_grad, axis = 0)#19
+
+  step_20 = int_grad
+  step_21 = step_20
+  step_22 = step_20
+
+  dx = step_21.dot(Wx.T)
+  dWx = (x.T).dot(step_21)
+
+  dprev_h = step_22.dot(Wh.T)
+  dWh = (prev_h.T).dot(step_22)
+
+  dprev_c = second * step_7
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
