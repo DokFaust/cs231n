@@ -202,7 +202,8 @@ def word_embedding_forward(x, W):
   #                                                                            #
   # HINT: This should be very simple.                                          #
   ##############################################################################
-  pass
+  out = W[x]
+  cache = (x,W)
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
@@ -230,7 +231,17 @@ def word_embedding_backward(dout, cache):
   #                                                                            #
   # HINT: Look up the function np.add.at                                       #
   ##############################################################################
-  pass
+  x, W = cache
+  dW = np.zeros_like(W)
+
+  #Numpy has a special kind of functions called unfunc. Those function have
+  #implemented some useful methods such as .at() that takes three arguments
+  #first the array that will be modified, second the target indices and third
+  #the arguments summed. In this case the operation is equivalent to
+  # dW[x] += dout except that if one index is repeated in x the sum will be
+  #performed a second time
+  
+  np.add.at(dW, x, dout)
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
