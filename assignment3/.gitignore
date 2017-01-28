@@ -1,6 +1,0 @@
-*.swp
-*.pyc
-.env/*
-.sh
-.jpg
-/cs231n/classifiers/*
