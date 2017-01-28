@@ -102,13 +102,24 @@ def rnn_forward(x, h0, Wx, Wh, b):
   - h: Hidden states for the entire timeseries, of shape (N, T, H).
   - cache: Values needed in the backward pass
   """
-  h, cache = None, None
+  h, cache = None, {}
   ##############################################################################
   # TODO: Implement forward pass for a vanilla RNN running on a sequence of    #
   # input data. You should use the rnn_step_forward function that you defined  #
   # above.                                                                     #
   ##############################################################################
-  pass
+  N,T,D = x.shape
+  _,H = h0.shape
+  h = np.zeros((N,T,H))
+  h[:,-1,:] = h0
+  cache['arr'] = []
+  for t in xrange(T):
+      #The weight matrix is updated using the previous time step parameters
+      #while the data matrix is the current one
+      next_h, cache_t = rnn_step_forward(x[:,t,:], h[:,t-1,:], Wx, Wh, b)
+      cache['arr'].append(cache_t)
+      h[:,t,:] = next_h
+  cache['D'] = D
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
@@ -135,7 +146,35 @@ def rnn_backward(dh, cache):
   # sequence of data. You should use the rnn_step_backward function that you   #
   # defined above.                                                             #
   ##############################################################################
-  pass
+  N, T, H = dh.shape
+  D = cache['D']
+
+  #Initializations BOOOOOORING but checkout dimensions!
+  dx = np.zeros( (N, T, D) )
+
+  dh0 = np.zeros( (N, H) )
+
+  dWx = np.zeros( (D, H) )
+
+  dWh = np.zeros( (H, H) )
+
+  db  = np.zeros( (H,  ) )
+
+  dh = dh.copy()
+
+  for t in reversed(xrange(T)):
+
+      dx_t, dh_t, dWx_t, dWh_t, db_t = rnn_step_backward(dh[:, t, :], cache['arr'][t])
+
+      if (t-1) >= 0:
+          dh[:, t-1, :] += dh_t
+      else:
+          dh0 = dh_t
+
+      dx[:, t, :] += dx_t
+      dWx += dWx_t
+      dWh += dWh_t
+      db  += db_t
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
