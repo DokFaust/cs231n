@@ -264,7 +264,7 @@ class CaptioningRNN(object):
         if self.cell_type == 'rnn':
             h[:, i, :], _ = rnn_step_forward(word_embeddings[:,i-1,:], h[:, i-1,:], Wx, Wh, b)
         elif self.cell_type == 'lstm':
-            h[:, i, :], c[:, i, :], _ = lstm_step_forward(word_embeddings[:,i-1,:], h[:, i-1,:], Wx, Wh, b)
+            h[:,i,:], c[:,i,:],_ = lstm_step_forward(word_embeddings[:,i-1,:], h[:,i-1,:], c[:,i-1,:], Wx, Wh, b)
 
         # (3) apply the learned affine layer to store the scores
 
