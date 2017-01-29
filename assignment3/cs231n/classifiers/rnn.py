@@ -244,7 +244,32 @@ class CaptioningRNN(object):
     # functions; you'll need to call rnn_step_forward or lstm_step_forward in #
     # a loop.                                                                 #
     ###########################################################################
-    pass
+    # The word token dewscribing the sample is <START>
+    captions[:, 0] = self._start
+
+    #Feature morphing
+    prev_h, _ = affine_forward(features, W_proj, b_proj)
+    h = np.zeros( (N, max_length, prev_h.shape[1]) )
+    h[:,0,:] = prev_h
+    c = np.zeros_like(h)
+
+    for i in xrange(1, max_length):
+
+        #Step 1 The word is embedded
+
+        word_embeddings, _ = word_embedding_forward(captions, W_embed)
+
+        #(2) Get the correct weight using the appropiate layer network
+
+        if self.cell_type == 'rnn':
+            h[:, i, :], _ = rnn_step_forward(word_embeddings[:,i-1,:], h[:, i-1,:], Wx, Wh, b)
+        elif self.cell_type == 'lstm':
+            h[:, i, :], c[:, i, :], _ = lstm_step_forward(word_embeddings[:,i-1,:], h[:, i-1,:], Wx, Wh, b)
+
+        # (3) apply the learned affine layer to store the scores
+
+        scores,_ = affine_forward(h[:,i,:], W_vocab, b_vocab)
+        captions[:,i] = np.argmax(scores, axis = 1)
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
