@@ -456,7 +456,26 @@ def lstm_backward(dh, cache):
   # TODO: Implement the backward pass for an LSTM over an entire timeseries.  #
   # You should use the lstm_step_backward function that you just defined.     #
   #############################################################################
-  pass
+  N, T, H = dh.shape
+  D = cache['D']
+
+  dx = np.zeros( (N, T, D) )
+  dWx = np.zeros( (D, 4*H) )
+  dWh = np.zeros( (H, 4*H) )
+  db  = np.zeros( (4*H) )
+
+  dprev = np.zeros( (N,H) )
+  dprev_c = np.zeros((N,H))
+
+  for t in xrange(T-1, -1, -1):
+
+      #Updating the gradient on LSTM
+      dx[:, t, :], dprev, dprev_c, dWx_temp, dWh_temp, db_temp = lstm_step_backward(dh[:, t, :]+dprev, dprev_c, cache[t])
+      dWx += dWx_temp
+      dWh += dWh_temp
+      db  += db_temp
+
+  dh0 = dprev 
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
