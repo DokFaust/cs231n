@@ -141,14 +141,9 @@ class CaptioningRNN(object):
 
     affine_out, affine_cache = affine_forward(features, W_proj, b_proj)
 
-    ##BUG: Test if out shape is correct
-    ##print affine_out.shape()
-
     #(2) captions_in is transformed into embedding captions of size (N,M)
 
     embedding_out, embedding_cache = word_embedding_forward(captions_in, W_embed)
-
-    ##print embedding_out.shape()
 
     #(3) depending on the kind of network we employ, we specify the forward pass
     # For every loss call the target network will EITHER be a rnn OR a lstm
