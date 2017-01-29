@@ -296,10 +296,10 @@ def lstm_step_forward(x, prev_h, prev_c, Wx, Wh, b):
   #weights in four sub-intervals  tha will be merged together in the cache
   #Please see the formula in the course slides or check out the deep learning book
 
-  first  = sigmoid(scores[:, : H])
-  second = sigmoid(scores[:, H : 2*H])
-  third  = sigmoid(scores[:, 2*H : 3*H])
-  fourth = sigmoid(scores[:, 3*H : ])
+  first  = sigmoid(scores[:,:H])
+  second = sigmoid(scores[:,H:2*H])
+  third  = sigmoid(scores[:,2*H:3*H])
+  fourth = np.tanh(scores[:,3*H:])
 
   next_c = (prev_c * second) + ( fourth * first)
   next_h = third * np.tanh(next_c)
@@ -412,7 +412,23 @@ def lstm_forward(x, h0, Wx, Wh, b):
   # TODO: Implement the forward pass for an LSTM over an entire timeseries.   #
   # You should use the lstm_step_forward function that you just defined.      #
   #############################################################################
-  pass
+  N, T, D = x.shape
+  _, H = h0.shape
+
+  h = np.zeros( (N,T,H) )
+  c = np.zeros( (N,T,H) )
+  c0 = np.zeros( (N, H) )
+
+  cache = {}
+
+  for t in xrange(T):
+      #Using h0 and c0 at timestep 0
+      if t==0:
+          h[:,t,:], c[:,t,:], cache[t] = lstm_step_forward(x[:,t,:], h0, c0, Wx, Wh, b)
+      else:
+          h[:,t,:], c[:,t,:], cache[t] = lstm_step_forward(x[:,t,:], h[:,t-1,:], c[:,t-1,:], Wx, Wh, b)
+
+  cache['D'] = D
   ##############################################################################
   #                               END OF YOUR CODE                             #
   ##############################################################################
